@@ -1,3 +1,3 @@
 # DATA 612
 
-This repository is for DATA 612 
+Repository for DATA 612 assignments/projects 
