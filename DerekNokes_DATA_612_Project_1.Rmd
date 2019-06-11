@@ -36,15 +36,13 @@ options(htmltools.dir.version = FALSE)
 # Introduction
 
 In the first section of this project, we implement the required functionality and
-validate it using the data from parts K through P of the Coursera/Stanford
-Networks Illustrated course. In the second section of the project, we apply the
-implemented functionality to our own data.
+validate it using the data from parts K through P of the Princeton/Coursera *Networks Illustrated* course [@NetworksPrinciplesWithoutCalc]. In the second section of the project, we apply the implemented functionality to our own data.
 
 # Code Validation
 
 **If you choose to work with a large dataset, you're encouraged to also create a small, relatively dense "user-item" matrix as a subset so that you can hand-verify your calculations.**
 
-Prior to using our own data, we reproduce the data used in parts $K$ through $P$ of the Coursera/Stanford Networks Illustrated course and use it to validate our work. 
+Prior to using our own data, we reproduce the data used in parts K through P of the *Networks Illustrated* course and use it to validate our work. 
 
 First we create the data used in the video series:
 
@@ -76,13 +74,13 @@ data_df<-data.frame(users,data)
 ```
 
 ```{marginfigure}
-Create data used in parts $K$ through $P$ of the Coursera/Stanford Networks Illustrated course.
+Create data used in parts K through P of the *Networks Illustrated* course.
 
 ```
 
 ```{r,echo=F}
 kable(data_df %>% select(-users),format='latex', 
-      caption = "Coursera/Stanford Networks Illustrated Data", booktabs = T) 
+      caption = "Networks Illustrated Data", booktabs = T) 
 
 ```
 
@@ -121,7 +119,7 @@ Compute the mean rating for the  training and testing data sets.
 
 ```
 
-The mean rating for the training set is `r meanRatingTrain`, which matches value determined in the Coursera/Stanford Networks Illustrated course videos.
+The mean rating for the training set is `r meanRatingTrain`, which matches value determined in the videos.
 
 Next, we define a function to compute the root mean squared error (RMSE) as follows:
 
@@ -137,13 +135,14 @@ RMSE <- function(test,train){
 Then we compute the root mean squared error (RMSE) as follows:
 
 ```{r}
-# compute root mean squared error (RMSE) of training and testing data sets
+# compute root mean squared error (RMSE) of training and 
+# testing data sets
 rmseTrain<-RMSE(train$rating,train$rating)
 rmseTest<-RMSE(test$rating,train$rating)
 
 ```
 
-The training and testing set root mean squared errors (RMSEs) are `r round(rmseTrain,4)` and `r round(rmseTest,4)` respectively, which again matches the values determined in the Coursera/Stanford Networks Illustrated course videos.
+The training and testing set root mean squared errors (RMSEs) are `r round(rmseTrain,4)` and `r round(rmseTest,4)` respectively, which again matches the values determined in the videos.
 
 Now, we compute the user and item biases:
 
@@ -166,28 +165,30 @@ itemBias <- train %>% filter(!is.na(rating)) %>%
 
 ```{r,echo=F}
 kable(userBias,format='latex',
-  caption = "Coursera/Stanford Networks Illustrated User Biases",booktabs = T)
+  caption = "Networks Illustrated User Biases",booktabs = T)
 
 ```
 
 ```{r,echo=F}
 kable(itemBias,format='latex',
-  caption = "Coursera/Stanford Networks Illustrated Item Biases", booktabs = T)
+  caption = "Networks Illustrated Item Biases", booktabs = T)
 
 ```
 
-Both the user and item biases shown above match the results from the Coursera/Stanford Networks Illustrated videos.
+Both the user and item biases shown above match the results from the videos.
 
 Finally, we create the training and testing set baseline predictions:
 
 ```{r}
 # create training set baseline table
-train_table <- train %>% left_join(userBias, by = "users") %>%
+train_table <- train %>% left_join(userBias, 
+  by = "users") %>%
   left_join(itemBias, by = "item") %>%
   mutate(meanRating = meanRatingTrain) %>%
   mutate(baseline = meanRating + userBias + itemBias)
 # create testing set baseline table
-test_table <- test %>% left_join(userBias, by = "users") %>%
+test_table <- test %>% left_join(userBias, 
+  by = "users") %>%
   left_join(itemBias, by = "item") %>%
   mutate(meanRating = meanRatingTrain) %>%
   mutate(baseline = meanRating + userBias + itemBias)
@@ -197,38 +198,40 @@ test_table <- test %>% left_join(userBias, by = "users") %>%
 
 ```{r,echo=F}
 kable(train_table,format='latex',
-  caption = "Coursera/Stanford Networks Illustrated Training Set Baseline Predictions",
+  caption = "Networks Illustrated Training Set Baseline Predictions",
   booktabs = T)
 
 ```
 
 ```{r,echo=F}
 kable(test_table,format='latex',
-  caption = "Coursera/Stanford Networks Illustrated Testing Set Baseline Predictions",
+  caption = "Networks Illustrated Testing Set Baseline Predictions",
   booktabs = T)
 
 ```
 
 \pagebreak
 
-We now combine the training and testing baseline predictions into a matrix to compare against the results from the Coursera/Stanford Networks Illustrated video series:
+We now combine the training and testing baseline predictions into a matrix to compare against the results from the *Networks Illustrated* video series:
 
 ```{r}
 # create baseline matrix to compare against video example
-baselineTable<-rbind(train_table[,c('users','item','baseline')],
-  test_table[,c('users','item','baseline')]) %>% 
-  spread(key=item,value=baseline) %>% column_to_rownames('users')
+baselineTable<-rbind(train_table[,c('users','item',
+  'baseline')],test_table[,c('users','item',
+  'baseline')]) %>% 
+  spread(key=item,value=baseline) %>% 
+  column_to_rownames('users')
 
 ```
 
 ```{r,echo=F}
 kable(baselineTable,format='latex',
-  caption = "Coursera/Stanford Networks Illustrated Baseline Prediction Matrix",
+  caption = "Networks Illustrated Baseline Prediction Matrix",
   booktabs = T)
 
 ```
 
-The results directly above almost match those from the Coursera/Stanford Networks Illustrated
+The results directly above almost match those from the *Networks Illustrated*
 video series. There are a few places in the video on the baseline prediction and RMSE where the results are rounded to make the arithmetic easier to do by hand and this results in a minor difference in the baseline prediction and the root mean squared error.
 
 Finally, we create a summary table to compare the root mean squared error (RMSE) of the (raw) mean rating and the baseline predictions for both the training and testing data sets:
@@ -240,12 +243,14 @@ RMSE_baseline <- function(y,yBaseline){
   return(rmse)
 }
 # compute baseline RMSE for training set
-rmseTrainBaseline<-RMSE_baseline(train_table$rating,train_table$baseline)
+rmseTrainBaseline<-RMSE_baseline(train_table$rating,
+  train_table$baseline)
 # compute baseline RMSE for testing set
-rmseTestBaseline<-RMSE_baseline(test_table$rating,test_table$baseline)
+rmseTestBaseline<-RMSE_baseline(test_table$rating,
+  test_table$baseline)
 
-rmses<-matrix(c(rmseTrain,rmseTrainBaseline,rmseTest,rmseTestBaseline),
-  byrow=T,nrow=2)
+rmses<-matrix(c(rmseTrain,rmseTrainBaseline,rmseTest,
+  rmseTestBaseline),byrow=T,nrow=2)
 setLabels<-c('Train','Test')
 rmseTypeLabels<-c('Mean (Raw)','Baseline')
 colnames(rmses)<-rmseTypeLabels
@@ -255,7 +260,7 @@ rownames(rmses)<-setLabels
 
 ```{r,echo=F}
 kable(rmses,format='latex',
-  caption = "Coursera/Stanford Networks Illustrated RMSE Summary",
+  caption = "Networks Illustrated RMSE Summary",
   booktabs = T)
 
 ```
@@ -268,7 +273,7 @@ In this section, we apply the implemented functionality to our own data set.
 
 **Briefly describe the recommender system that you're going to build out from a business perspective, e.g. "This system recommends data science books to readers."**
 
-The system to be built out is intended to provide managed account program recommendations to investors on an online platform. The system is initially to be based on explicit program ratings provided by platform users. Eventually the business expects to expand the recommender system to use managed account transaction data and program characteristics to improve the utility of the recommendations. The inventory of programs is currently relatively small relative to the number of users, so the ratings data is relatively dense.
+The system to be built out is intended to provide managed account program recommendations to investors on an online platform. The system is initially to be based on explicit program ratings provided by platform users. Eventually, the business expects to expand the recommender system to use managed account transaction data and program characteristics to improve the utility of the recommendations. The inventory of programs is currently relatively small relative to the number of users, so the ratings data is relatively dense.
 
 **Find a dataset, or build out your own toy dataset. As a minimum requirement for complexity, please include numeric ratings for at least five users, across at least five items, with some missing data. Load your data into (for example) an R or pandas dataframe, a Python dictionary or list of lists, (or another data structure of your choosing). From there, create a user-item matrix.**
 
@@ -290,7 +295,8 @@ highestRating<-5
 ratingProbabilities<-c(0.05,0.1,0.4,0.25,0.1,0.1)
 # define rating scale including NA
 ratingScale<-c(seq(lowestRating,highestRating),NA)
-# create random user x item matrix of ratings by sampling from ratings scale
+# create random user x item matrix of ratings by 
+# sampling from ratings scale
 toyRatingsDf<-matrix(sample(ratingScale,
   size=nUsers*nItems,replace=TRUE,prob=ratingProbabilities),
   nUsers,nItems)
@@ -340,7 +346,7 @@ testToyRatingDf<-test %>% spread(key=item,value=rating)
 
 ```
 
-We use `r splitRatio*100`% of the data for training and use the remaining `r (1-splitRatio)*100`% for testing.
+We use `r splitRatio*100`% of the data for training and the remaining `r (1-splitRatio)*100`% for testing.
 
 **Using your training data, calculate the raw average (mean) rating for every user-item combination.**
 
@@ -352,18 +358,23 @@ meanRatingTrain<-mean(longTrainToyRatingDf$rating,na.rm=T)
 
 ```
 
+The mean rating for the training set is `r round(meanRatingTrain,4)`.
+
 **Calculate the RMSE for raw average for both your training data and your test data.**
 
 We calculate the root mean squared error (RMSE) for both our training and testing data:
 
 ```{r}
-# compute root mean squared error (RMSE) of training and testing data sets
-rmseTrain<-RMSE(longTrainToyRatingDf$rating,longTrainToyRatingDf$rating)
-rmseTest<-RMSE(longTestToyRatingDf$rating,longTrainToyRatingDf$rating)
+# compute root mean squared error (RMSE) of training and 
+# testing data sets
+rmseTrainToy<-RMSE(longTrainToyRatingDf$rating,
+  longTrainToyRatingDf$rating)
+rmseTestToy<-RMSE(longTestToyRatingDf$rating,
+  longTrainToyRatingDf$rating)
 
 ```
 
-The training and testing set root mean squared errors (RMSEs) are `r round(rmseTrain,4)` and `r round(rmseTest,4)` respectively.
+The training and testing set root mean squared errors (RMSEs) are `r round(rmseTrainToy,4)` and `r round(rmseTestToy,4)` respectively.
 
 **Using your training data, calculate the bias for each user and each item.**
 
@@ -443,9 +454,12 @@ We compute the root mean squared error (RMSE) for both the training and testing 
 
 ```{r}
 # compute baseline RMSE for training set
-rmseTrainBaseline<-RMSE_baseline(train_table$rating,train_table$baseline)
+rmseTrainBaselineToy<-RMSE_baseline(train_table$rating,
+  train_table$baseline)
 # compute baseline RMSE for testing set
-rmseTestBaseline<-RMSE_baseline(test_table$rating,test_table$baseline)
+rmseTestBaselineToy<-RMSE_baseline(test_table$rating,
+  test_table$baseline)
+
 ```
 
 
@@ -455,8 +469,8 @@ We create a summary table to compare the root mean squared error (RMSE) of the (
 
 ```{r}
 # create summary table
-rmses<-matrix(c(rmseTrain,rmseTrainBaseline,rmseTest,rmseTestBaseline),
-  byrow=T,nrow=2)
+rmses<-matrix(c(rmseTrainToy,rmseTrainBaselineToy,
+  rmseTestToy,rmseTestBaselineToy),byrow=T,nrow=2)
 setLabels<-c('Train','Test')
 rmseTypeLabels<-c('Mean (Raw)','Baseline')
 colnames(rmses)<-rmseTypeLabels
@@ -471,7 +485,7 @@ kable(rmses,format='latex',
 
 ```
 
-From the above table we see that baseline approach improves upon the raw average (mean) approach for both the training and testing data sets.
+From the above table, we see that baseline approach technically improves upon the raw average (mean) approach for both the training and testing data sets (albeit not in a significant way). This is the expected result given the way we generated the data.
 
 # Software
 
@@ -479,7 +493,7 @@ This project was created using base R [@R-base] and the R markdown [@R-rmarkdown
 
 # References
 
-```{r bib, include=FALSE}
+```{r bib, include=FALSE,eval=FALSE}
 # create a bib file for the R packages used in this document
 knitr::write_bib(c('base', 'rmarkdown','tidyverse','tint','kableExtra'),
   file = 'skeleton.bib')
