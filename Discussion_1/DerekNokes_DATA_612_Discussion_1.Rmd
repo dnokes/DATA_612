@@ -1,5 +1,5 @@
 ---
-title: "DATA 612: Discussion 1 - Spotify Recommendations"
+title: "DATA 612: Research Discussion Assignment 1 - Spotify Recommendations"
 subtitle: "Project 1"
 author: "Derek G Nokes"
 date: "`r Sys.Date()`"
