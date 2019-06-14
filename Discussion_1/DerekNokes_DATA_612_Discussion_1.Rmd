@@ -38,7 +38,7 @@ options(htmltools.dir.version = FALSE)
 
 # Introduction
 
-Of the services that I use that come packaged with recommendations, Spotify is - by far - the most effective at producing recommendations that I find useful. This effectiveness has motivated my search for information over years about how they produce such great recommendations.
+Of the services that I use that come packaged with recommendations, Spotify is - by far - the most effective at producing recommendations that I find useful. This effectiveness has motivated my search for information over the years about how they produce such great recommendations.
 
 Spotify - the most popular global audio streaming subscription service - operates in 79 markets, has 217 million users (including 100m paid subscribers), and streams a catalog of 50+ million tracks. Spotify's user by track matrix is simply enormous. Not only that, but there are also 3+ billion user-created playlists on the platform - a goldmine for information about what Spotify's users like.
 
