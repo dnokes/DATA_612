@@ -73,6 +73,8 @@ One part of the system does Deep Learning on audio files to find representations
 **Collaborative Filtering using Deep Learning:**
 Another part of the system appears to learn latent embeddings for users and items, using implicit user/track feedback data. The network takes as input a user's history of implicit ratings (i.e., whether they stream a track for longer than a minimum time) and attempts to predict their listening history (approximately 2 weeks).
 
+More information about applications of Deep Learning can be found here: http://benanne.github.io/2014/08/05/spotify-cnns.html
+
 ![Ratio Data Flow](F:/Dropbox/github/DATA_612/DATA_612/Discussion_1/RadioDataFlow.PNG)
 
 ![Discover Weekly Data Flow](F:/Dropbox/github/DATA_612/DATA_612/Discussion_1/DiscoverWeeklyDataFlow.PNG)
