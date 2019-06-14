@@ -70,10 +70,6 @@ This part of the system does Deep Learning on Audio files to learn latent embedd
 
 ![Discover Weekly Data Flow](F:/Dropbox/github/DATA_612/DATA_612/Discussion_1/DiscoverWeeklyDataFlow.PNG)
 
-# Software
-
-This discussion post was created using base R [@R-base] and the R markdown [@R-rmarkdown], tint [@R-tint], kableExtra [@R-kableExtra], and tidyverse [@R-tidyverse] libraries.
-
 # Python Implementation Links
 
 The following URLs provide Python implementations for some of the methods used in the ensemble:
@@ -112,8 +108,9 @@ http://yifanhu.net/PUB/cf.pdf
 
 http://stanford.edu/~rezab/nips2014workshop/submits/logmat.pdf
 
+# Software
 
-**Software**
+This discussion post was created using base R [@R-base] and the R markdown [@R-rmarkdown], tint [@R-tint], kableExtra [@R-kableExtra], and tidyverse [@R-tidyverse] libraries.
 
 ```{r bib, include=FALSE,eval=T}
 # create a bib file for the R packages used in this document
