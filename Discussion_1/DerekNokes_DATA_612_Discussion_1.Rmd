@@ -68,7 +68,7 @@ NLP is applied to meta data associated with playlists.
 There appear to be two uses of Deep Learning in the Spotify recommender system:
 
 **Content-Based Filtering using Deep Learning:**
-One part of the system does Deep Learning on Audio files to find representations of the tracks that can be used in recommendations.
+One part of the system does Deep Learning on audio files to find representations of the tracks that can be used in recommendations.
 
 **Collaborative Filtering using Deep Learning:**
 Another part of the system appears to learn latent embeddings for users and items, using implicit user/track feedback data. The network takes as input a user's history of implicit ratings (i.e., whether they stream a track for longer than a minimum time) and attempts to predict their listening history (approximately 2 weeks).
