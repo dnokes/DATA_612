@@ -42,7 +42,7 @@ Of the services that I use that come packaged with recommendations, Spotify is -
 
 Spotify - the most popular global audio streaming subscription service - operates in 79 markets, has 217 million users (including 100m paid subscribers), and streams a catalog of 50+ million tracks. Spotify's user by track matrix is simply enormous. Not only that, but there are also 3+ billion user-created playlists on the platform - a goldmine for information about what Spotify's users like.
 
-Employees of Spotify have publicly discussed aspects of the inner workings of their recommendation platform over the years, so there is some information about how the system works. Although their recommender continues to evolve, from what I can glean from publicly available information, they use a ensemble of at three types of recommenders (as-of last 2015):
+Employees of Spotify have publicly discussed aspects of the inner workings of their recommendation platform over the years, so there is some information about how the system works. Although their recommender continues to evolve, from what I can glean from publicly available information, they use a ensemble of at several types of recommenders (as-of last 2015):
 
 ![Recommender Structure](F:/Dropbox/github/DATA_612/DATA_612/Discussion_1/ModelStructure.PNG)
 
