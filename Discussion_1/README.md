@@ -1,3 +1,3 @@
-# DATA 612
+# DATA 612 - Discussion 1
 
-Repository for DATA 612 assignments/projects 
+Folder for DATA 612 discussion 1
