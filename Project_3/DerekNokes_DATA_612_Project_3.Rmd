@@ -1,0 +1,541 @@
+---
+title: "DATA 612: Project 3: Matrix Factorization"
+subtitle: "Using the Power Method to do Singular Value Decomposition (SVD)"
+author: "Derek G. Nokes"
+date: "`r Sys.Date()`"
+output: tint::tintPdf
+bibliography: skeleton.bib
+link-citations: yes
+header-includes: 
+  - \usepackage{stackengine}
+  - \usepackage{amsbsy}
+
+---
+
+```{r setup, include=FALSE}
+# import R packages
+library(kableExtra)
+library(reticulate)
+library(tidyverse)
+library(hash)
+library(tufte)
+library(tint)
+# invalidate cache when the package version changes
+knitr::opts_chunk$set(tidy = FALSE, cache.extra = packageVersion('tint'))
+options(htmltools.dir.version = FALSE)
+```
+
+
+```{r,echo=FALSE}
+# define python path
+pythonDirectory <- "C:/Users/Derek/Anaconda2/"
+# select python version
+use_python(pythonDirectory)
+# select environment
+#use_condaenv("myenv")
+
+```
+
+# Introduction
+
+- [what is it]
+
+- [why is it important]
+
+- [what are we going to cover]
+
+# Theory: Singular Value Decomposition (i.e., Spectral Decomposition)
+
+## **Definition**
+
+```{marginfigure,fig.fullwidth = TRUE}
+Rank $r$ is the number of linearly independent columns of $A$. In most applications, the rank is equal to the number of columns (i.e., $r = n$).
+
+```
+
+
+The singular value decomposition (SVD) of a matrix $A$ with $m$ rows and $n$ columns is
+
+$$A=U\Sigma V^{T}$$
+
+where
+
+$A$ = $m \times n$ input data matrix
+
+$r$ = rank of matrix $A$ (i.e., the number of linearly independent columns of $A$)
+
+$U$ = $m \times r$ matrix of left singular vectors
+
+$\Sigma$ = $r \times r$ diagonal matrix
+
+$V$ = $n \times r$ matrix of right singular vectors. The superscript $T$ indicates the transpose of matrix $V$.
+
+```{marginfigure,fig.fullwidth = TRUE}
+If $A$ has rank $r$, then $U$ is $m \times r$, $\Sigma$ is an $r \times r$ diagonal matrix with non-negative, non-increasing entries (i.e., sorted from largest to smallest), $V$ is $n \times r$ and $V^{T}$ is $n \times r$.
+
+$$\newcommand*{\clap}[1]{\hbox to 0pt{\hss#1\hss}}
+\newcommand*{\mat}[1]{\boldsymbol{\mathrm{#1}}}
+\newcommand*{\subdims}[3]{\clap{\raisebox{#1}[0pt][0pt]{$\scriptstyle(#2 \times #3)$}}}
+\fboxrule=1pt
+\framebox[1cm]{\clap{\raisebox{0pt}[0.5cm][0.5cm]{$\mat A$}}\subdims{-1cm} m n} =
+\framebox[1cm]{\clap{\raisebox{0pt}[0.5cm][0.5cm]{$\mat U$}}\subdims{-1cm} m r} \times \ 
+\framebox[1cm]{\clap{\raisebox{0pt}[0.5cm]{$\Sigma$}}\subdims{-1cm} r r} \times
+\framebox[1.5cm]{\clap{\raisebox{0.25pt}[0.5cm]{$\mat V^T$}}\subdims{-1cm} r n}$$
+  
+```
+
+It is aways possible to decompose a *real* matrix $A$ into $U \Sigma V^{T}$ where $U$, $\Sigma$, and $V$ are unique, $U$ and $V$ are column orthonormal, and $\Sigma$ is a diagonal matrix where the singular values found along the diagonal are positive and sorted in decreasing order (i.e., $\sigma_{1} \ge \sigma_{2} \ge \dots \ge 0$).
+
+By *column orthonormal*, we mean that $U^{T}U=I$ and $V^{T}V=I$, where $I$ is an identity matrix. This is another way of saying that the columns of $U$ and $V$ are *orthogonal unit vectors*.
+
+$$A_{[m \times n]}=U_{[m \times r]}\Sigma_{[r \times r]}\left(V_{[n \times r]}\right)^{T}$$
+
+$$\begin{bmatrix} 
+  a_{11} & a_{12} & \ldots & a_{1n} \\ 
+  a_{21} & a_{22} & \ldots & a_{2n} \\ 
+  \vdots & \vdots & \ddots & \vdots \\ 
+  a_{m1} & a_{m2} & \ldots & a_{mn}
+\end{bmatrix} =\begin{bmatrix} 
+  u_{11} & u_{12} & \ldots & u_{1r} \\ 
+  u_{21} & u_{22} & \ldots & u_{2r} \\ 
+  \vdots & \vdots & \ddots & \vdots \\ 
+  u_{m1} & u_{m2} & \ldots & u_{mr}
+\end{bmatrix}\times\begin{bmatrix} 
+  \sigma_{11} & 0 & \ldots & 0 \\ 
+  0 & \sigma_{22} & \ldots & 0 \\ 
+  \vdots & \vdots & \ddots & \vdots \\ 
+  0 & 0 & \ldots & \sigma_{rr}
+\end{bmatrix}\times\begin{bmatrix} 
+  v_{11} & v_{12} & \ldots & v_{1r} \\ 
+  v_{21} & v_{22} & \ldots & v_{2r} \\ 
+  \vdots & \vdots & \ddots & \vdots \\ 
+  v_{n1} & v_{n2} & \ldots & v_{nr}
+\end{bmatrix}^{T}$$
+
+## **Importance of Normalization**
+
+[Important to ensure that magnitudes of entries in the dataset matrix are appropriate, so that properties are compared in a way that accords with comparisons in the real world]
+
+[scale all of the attribute values into roughly the same range]
+
+[To address the possibly different magnitudes of different attributes, it is usual to divide the entries in each column by the standard deivation of that column]
+
+[When a matrix is sparse (i.e., most of its entries are zeros), it may be more appropriate to normalzie by keeping the zero entries fixed. The mean of non-zero entires is then subtracted from the non-zero entries so that they become zero-cnetered, and only the non-zero entries are divided by the standard deviation of the column mean. The form of normalization needs to be considered carefully because it reduces the impact of zero values on the vay other values are adjusted, and so should not be used if zero values have some special significance. There is also the issue of how many non-zero entries there should be in the matrix before it is no longer considered sparse]
+
+# Interpretation
+
+[There are many ways to interpret the results of SVD]
+
+[Interpretation can be difficult]
+
+## **Factor Interpretation**
+
+
+## **Geometric Interpretation**
+
+
+## **Component Interpretation**
+If $u_{i}$ is the $i^{th}$ column of $U$, $\sigma_{i}$ is the $i^{th}$ singular value of $\Sigma$ and $v_{i}$ us the $i^{th}$ row of V, then
+
+$$A=\sum_{i=1}^{m}{A_{i}}=\sum_{i}^{m}{u_{i}\sigma_{i}v_{i}^{T}}$$
+Each entry of $A$ can be thought of as the sum of the corresponding entries in each of the columns $A_{i}$ and the pointwise sum of the $A_{i}$
+
+# Truncated Singular Value Decomposition (SVD)
+$$A \approx U\Sigma V^{T} = \sum_{i=1}^{r}\sigma_{i}u_{i} \otimes v_{i}^{T}$$
+
+```{marginfigure}
+Here, $\otimes$ denotes the outer product. The outer product $u \otimes v$ is equivalent to a matrix multiplication $uv^{T}$, provided that $u$ is represented as a $m \times 1$ column vector and $v$ as a $n \times 1$ column vector (which makes $v^{T}$ a row vector).
+
+```
+
+[can to MC to show this]
+
+In the context of 
+
+$U$ is like an 'object-to-concept' similarity matrix
+
+$V$ is like a 'attribute-to-concept' similarity matrix
+
+Diagonal elements of $\Sigma$ represents the 'strength` or 'importance' of each concept
+
+[Create a diagram with latex]
+
+# Implementation
+
+Lots of approaches available
+
+Document power method
+
+
+
+## **Power Method**
+
+In the following sub-section, we implement singular value decomposition (SVD) in Python using the power method.
+
+
+
+```{python,echo=FALSE}
+# import python packages
+import numpy as np
+from numpy.linalg import norm
+
+from random import normalvariate
+from math import sqrt
+
+```
+
+First, we define a function to create a random unit vector:
+
+```{python,echo=TRUE}
+def randomUnitVector(n):
+    unnormalized = [normalvariate(0, 1) for _ in range(n)]
+    theNorm = sqrt(sum(x * x for x in unnormalized))
+    return [x / theNorm for x in unnormalized]
+
+```
+
+Next, we define a function to compute the one-dimensional singular value decomposition (SVD):
+
+```{python,echo=TRUE}
+def svdPowerMethod_1d(A, epsilon=1e-10):
+    # The one-dimensional singular value decomposition (SVD)
+
+    # determine number of rows and columns of A
+    m, n = A.shape
+    # compute random unit vector
+    x = randomUnitVector(min(m,n))
+    # initalize previous V to None
+    lastV = None
+    # initialize V with random unit vector
+    V = x
+    # if number of rows greater than number of columns
+    if m > n:
+        # take dot product of A transpose and A
+        B = np.dot(A.T, A)
+    # if number of rows is equal to or less than number 
+    # of columns
+    else:
+        # take dot product of A and A transpose
+        B = np.dot(A, A.T)
+    # initialize number of iterations to 0
+    iterations = 0
+    # while 
+    while True:
+        # increment number of iterations
+        iterations += 1
+        # remember last V
+        lastV = V
+        # compute new V
+        V = np.dot(B, lastV)
+        # normalize V by norm of V
+        V = V / norm(V)
+        # check for convergence based on error threshold
+        if abs(np.dot(V, lastV)) > 1 - epsilon:
+            # print number of iterations it took to converge
+            print("Converged in "+str(iterations))
+            # return V
+            return V
+
+```
+
+Now, we define a function to compute the singular value decomposition (SVD) of a matrix, $A$, using the power method:
+
+```{python,echo=TRUE}
+def svdPowerMethod(A, k=None, epsilon=1e-10):
+    # Compute singular value decomposition (SVD) of matrix A
+    # using the power method. If k is None, compute full-rank 
+    # decomposition 
+    #
+    # A = input matrix [m x n]
+    # k = number of singular values to use
+    
+    # create float array
+    A = np.array(A, dtype=float)
+    # find n rows and m columns of A
+    m, n = A.shape
+    # create 
+    svdEstimate = []
+    # if k is not provided compute full-rank decomposition
+    if k is None:
+        # determine full-rank k
+        k = min(m, n)
+    # iterate from 0 to k
+    for i in range(k):
+        # make copy of matrix
+        matrixFor1D = A.copy()
+        # extract the singular value, U, and V
+        for singularValue, u, v in svdEstimate[:i]:
+            #
+            matrixFor1D -= singularValue * np.outer(u, v)
+        # number of rows is greater than number of columns
+        if m > n:
+            # compute next singular vector (v)
+            v = svdPowerMethod_1d(matrixFor1D, 
+              epsilon=epsilon)
+            # comput u from v
+            u_unnormalized = np.dot(A, v)
+            # next singular value
+            # compute norm of unnormalized u
+            sigma = norm(u_unnormalized)
+            # normalize u by singular value
+            u = u_unnormalized / sigma
+        else:
+            # next singular vector
+            u = svdPowerMethod_1d(matrixFor1D, 
+              epsilon=epsilon)
+            # take dot product of A transpose and u
+            v_unnormalized = np.dot(A.T, u)
+            # next singular value
+            # compute norm of unnormalized v
+            sigma = norm(v_unnormalized)
+            # normalize v by singular value
+            v = v_unnormalized / sigma
+        # store singular values, u, v
+        svdEstimate.append((sigma, u, v))
+    # extract singular values, u, v
+    output = [np.array(x) for x in zip(*svdEstimate)]
+    singularValues, us, vs = output
+    # return SVD result
+    return singularValues, us.T, vs
+
+```
+
+# Validation
+
+In this section, we validate the results of our implementation.
+
+First we define a matrix $A$:
+
+```{python,echo=TRUE}
+# create sample matrix
+A = np.array([
+  [4, 1, 1],
+  [2, 5, 3],
+  [1, 2, 1],
+  [4, 5, 5],
+  [3, 5, 2],
+  [2, 4, 2],  
+  [5, 3, 1],
+  [2, 2, 5],
+  ], dtype='float64')
+
+# determine n rows and m columns
+m,n = A.shape
+
+```
+
+Create a random unit vector:
+
+```{python}
+# 
+
+# build random unit vector
+x = randomUnitVector(min(m,n))
+
+```
+
+Let's have a look at the output of the `randomUnitVector` function:
+
+```{python,echo=FALSE}
+print(x)
+
+```
+
+To compute the full-rank decomposition of the `r py$m` by `r py$n` matrix $A$ we call the `svdPowerMethod(A)` function:
+
+```{python,echo=TRUE}
+# compute SVD
+singularValues,U,V = svdPowerMethod(A)
+
+```
+
+```{python,echo=FALSE}
+rS,cS=np.diag(singularValues).shape
+rU,cU=U.shape
+rV,cV=V.shape
+
+```
+
+The `r py$rU` by `r py$cU` matrix of left singular vectors $U$:
+
+```{python,echo=TRUE}
+print(U)
+
+```
+
+The `r py$rS` by `r py$cS` diagonal singular value matrix $\Sigma$:
+
+```{python,echo=TRUE}
+print(np.diag(singularValues))
+
+```
+
+The `r py$rV` by `r py$cV` matrix of right singular vectors $V$:
+
+```{python,echo=TRUE}
+print(V)
+
+```
+
+Finally, we reconstitute the matrix $A$:
+
+```{python,echo=TRUE}
+# reconstitute matrix A
+Sigma = np.diag(singularValues)
+# reconstitute matrix A
+AA=np.dot(U, np.dot(Sigma, V))
+
+```
+
+```{python,echo=TRUE}
+print(AA)
+
+```
+
+```{python,echo=TRUE}
+# define number of digits for rounding
+nDigits=10
+```
+
+We can see that the original and reconstituted matrices are the same to `r py$nDigits` decimal places:
+
+```{python,echo=TRUE}
+print(np.round(A - AA, decimals=nDigits))
+
+```
+
+We check our own implement of SVD against the `numpy.linalg.svd()` implementation.
+
+```{python,echo=TRUE}
+from numpy.linalg import svd
+U_np,singularValues_np,V_np = svd(A,full_matrices=False)
+
+
+```
+
+$U$:
+
+```{python,echo=TRUE}
+print(U_np)
+
+```
+
+$\Sigma$:
+
+```{python,echo=TRUE}
+print(np.diag(singularValues_np))
+
+```
+
+The singular values from `numpy.linalg.svd()` match those produced by our own function.
+
+$V$:
+
+```{python,echo=TRUE}
+print(V_np)
+
+```
+
+The 
+
+We again reconstitute the matrix $A$, this time using the output from `numpy.linalg.svd()` and display the differences between the original and reconstituted matrices:
+
+```{python,echo=TRUE}
+# reconstitute matrix A
+Sigma_np = np.diag(singularValues_np)
+# reconstitute matrix A
+AA_np=np.dot(U_np, np.dot(Sigma_np, V_np))
+# display difference
+print(np.round(A - AA_np, decimals=nDigits))
+
+```
+
+```{python,echo=TRUE}
+print(np.round(U-U_np, decimals=2))
+
+```
+
+```{python,echo=TRUE}
+print(np.round(Sigma-Sigma_np, decimals=2))
+
+```
+
+As expected, the singular values are almost identical.
+
+```{python,echo=TRUE}
+print(np.round(V-V_np, decimals=2))
+
+```
+
+We do not expect the left and right singular vectors to be the same because these the solution is not unique, however, much of $U$ and $V$ are close.
+
+# Applications: Recommender Systems
+
+Map query into a latent factor or 'concept space'
+
+## **Transaction Analytics**
+
+
+
+## **Ratings **
+
+movielens dataset?
+
+# Software
+
+This discussion post was created using base R [@R-base] and the R markdown [@R-rmarkdown], tint [@R-tint], kableExtra [@R-kableExtra], reticulate, [@R-reticulate], and tidyverse [@R-tidyverse] libraries.
+
+# References
+
+
+
+
+
+```{r bib, include=TRUE}
+# create a bib file for the R packages used in this document
+knitr::write_bib(c('base', 'rmarkdown'), file = 'skeleton.bib')
+```
+
+\pagebreak
+
+# Appendix A: Singular Value Decomposition (SVD) Relation to Eigen-Decomposition
+
+The singular value decomposition (SVD) can be applied to any $m \times n$ matrix, whereas the eigen-decomposition can be applied only to *diagonalizable matrices*^[A diagonalizable matrix is one where blaw blaw]. In this appendix, we briefly outline the relationship between SVD and the less general eigen-decomposition.
+
+Recall that for any singular value decomposition (SVD)
+
+$$A=U \Sigma V^{T} $$
+```{marginfigure}
+For SVD, $A$ does not need to be symmetric.
+
+```
+
+The eigen-value decomposition is defined as
+
+$$A=X \Lambda X^{T}$$
+```{marginfigure}
+For eigen-decomposition, $A$ must be symmetric (i.e. $m = n$).
+
+```
+
+$U$, $V$, $X$ are orthonormal (i.e., $U^{T}U=I$, $V^{T}V=I$, and $X^{T}X=I$)
+
+Given the singular value decomposition of $A$, the following two relations hold:
+
+$$AA^{T}=U \Sigma V^{T} \left (U \Sigma V^{T}\right)^{T} = U \Sigma (V \Sigma^{T}U^{T})=U \Sigma \Sigma^{T} U^{T}$$
+
+```{marginfigure}
+If $A$ is an object-by-attribute input data matrix with zero means and unit standard deviations, $AA^{T}$ and $A^{T}A$ are the correlation matrices for objects-to-objects and attributes-to-attributes respectively.
+
+```
+
+$$A^{T}A=V \Sigma^{T} U^{T} \left( U \Sigma V^{T}\right)=V \Sigma \Sigma^{T} V^{T}$$
+The right-hand sides of the two relations expressed above (namely equation blaw1 and blaw2), describe the eigen-decompositions of the left-hand sides. The columns of V (i.e., the right-singular vectors) are the eigenvectors of $A^{T}A$ (i.e., $V=X$ and $V^{T}=X^{T}$). The columns of U (i.e., the left-singular vectors) are the eigenvectors of $AA^{T}$ (i.e., $U=X$). The non-zero elements of $\Sigma$ (i.e., the non-zero singular values) are the square roots of the non-zero eigenvalues of $A^{T}A$ or $AA^{T}$ (i.e., $\Sigma \Sigma ^{T}=\Lambda$). This means that the eigenvalues are equivalent to the squared singular values (i.e., $\lambda_{i}=\sigma_{i}^{2}$.
+
+Substituting these into the equation immediately above, we get $A=X \Lambda X^{T}$.
+
+
+
+Now we use R to perform a quick check of these relationships
+
+[Show all of this with a numerical example using a ratings matrix]
