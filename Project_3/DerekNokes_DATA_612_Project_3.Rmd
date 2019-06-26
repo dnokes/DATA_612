@@ -9,7 +9,20 @@ link-citations: yes
 header-includes: 
   - \usepackage{stackengine}
   - \usepackage{amsbsy}
-
+  - \usepackage{booktabs} 
+  - \usepackage{longtable} 
+  - \usepackage{array} 
+  - \usepackage{multirow} 
+  - \usepackage{wrapfig} 
+  - \usepackage{float} 
+  - \usepackage{colortbl} 
+  - \usepackage{pdflscape} 
+  - \usepackage{tabu} 
+  - \usepackage{threeparttable} 
+  - \usepackage{threeparttablex} 
+  - \usepackage[normalem]{ulem} 
+  - \usepackage{makecell} 
+  - \usepackage{xcolor}
 ---
 
 ```{r setup, include=FALSE}
@@ -17,7 +30,6 @@ header-includes:
 library(kableExtra)
 library(reticulate)
 library(tidyverse)
-library(hash)
 library(tufte)
 library(tint)
 # invalidate cache when the package version changes
@@ -38,21 +50,16 @@ use_python(pythonDirectory)
 
 # Introduction
 
-- [what is it]
+Matrix factorizations are ubiquitous in modern data science. Our need to convert big data into a smaller set of latent factors grows as the amount of data we collect increases. In this project, we provide a brief overview of singular value decomposition (SVD) and a set SVD-like matrix factorizations. We implement the simple power method to do SVD on a dense matrix, then we move to a recommender system application on a sparse dataset using probabilistic matrix factorization (with and without biases).
 
-- [why is it important]
+# Theory: Singular Value Decomposition (i.e., Spectral Decomposition) and Related Matrix Factorizations
 
-- [what are we going to cover]
-
-# Theory: Singular Value Decomposition (i.e., Spectral Decomposition)
-
-## **Definition**
+## **Singular Value Decomposition (SVD)**
 
 ```{marginfigure,fig.fullwidth = TRUE}
 Rank $r$ is the number of linearly independent columns of $A$. In most applications, the rank is equal to the number of columns (i.e., $r = n$).
 
 ```
-
 
 The singular value decomposition (SVD) of a matrix $A$ with $m$ rows and $n$ columns is
 
@@ -60,7 +67,7 @@ $$A=U\Sigma V^{T}$$
 
 where
 
-$A$ = $m \times n$ input data matrix
+$A$ = $m \times n$ input data matrix ($A \in \mathbb{R}^{m \times n}$)
 
 $r$ = rank of matrix $A$ (i.e., the number of linearly independent columns of $A$)
 
@@ -71,7 +78,7 @@ $\Sigma$ = $r \times r$ diagonal matrix
 $V$ = $n \times r$ matrix of right singular vectors. The superscript $T$ indicates the transpose of matrix $V$.
 
 ```{marginfigure,fig.fullwidth = TRUE}
-If $A$ has rank $r$, then $U$ is $m \times r$, $\Sigma$ is an $r \times r$ diagonal matrix with non-negative, non-increasing entries (i.e., sorted from largest to smallest), $V$ is $n \times r$ and $V^{T}$ is $n \times r$.
+If $A$ has rank $r$, then $U$ is $m \times r$, $\Sigma$ is an $r \times r$ diagonal matrix with non-negative, non-increasing entries (i.e., sorted from largest to smallest), $V$ is $n \times r$ and $V^{T}$ is $r \times n$.
 
 $$\newcommand*{\clap}[1]{\hbox to 0pt{\hss#1\hss}}
 \newcommand*{\mat}[1]{\boldsymbol{\mathrm{#1}}}
@@ -84,103 +91,127 @@ $$\newcommand*{\clap}[1]{\hbox to 0pt{\hss#1\hss}}
   
 ```
 
-It is aways possible to decompose a *real* matrix $A$ into $U \Sigma V^{T}$ where $U$, $\Sigma$, and $V$ are unique, $U$ and $V$ are column orthonormal, and $\Sigma$ is a diagonal matrix where the singular values found along the diagonal are positive and sorted in decreasing order (i.e., $\sigma_{1} \ge \sigma_{2} \ge \dots \ge 0$).
+It is always possible to decompose a *real* matrix $A$ into $U \Sigma V^{T}$ where $U$, $\Sigma$, and $V$ are unique, $U$ and $V$ are column orthonormal, and $\Sigma$ is a diagonal matrix where the singular values found along the diagonal are positive and sorted in decreasing order (i.e., $\sigma_{1} \ge \sigma_{2} \ge \dots \ge 0$).
 
-By *column orthonormal*, we mean that $U^{T}U=I$ and $V^{T}V=I$, where $I$ is an identity matrix. This is another way of saying that the columns of $U$ and $V$ are *orthogonal unit vectors*.
+By *column orthonormal*, we mean that $U^{T}U=I$ and $V^{T}V=I$, where $I$ is an identity matrix. 
 
 $$A_{[m \times n]}=U_{[m \times r]}\Sigma_{[r \times r]}\left(V_{[n \times r]}\right)^{T}$$
 
 $$\begin{bmatrix} 
-  a_{11} & a_{12} & \ldots & a_{1n} \\ 
-  a_{21} & a_{22} & \ldots & a_{2n} \\ 
+  a_{11} & a_{12} & \ldots & a_{1m} \\ 
+  a_{21} & a_{22} & \ldots & a_{2m} \\ 
   \vdots & \vdots & \ddots & \vdots \\ 
-  a_{m1} & a_{m2} & \ldots & a_{mn}
+  a_{n1} & a_{n2} & \ldots & a_{nm}
 \end{bmatrix} =\begin{bmatrix} 
-  u_{11} & u_{12} & \ldots & u_{1r} \\ 
-  u_{21} & u_{22} & \ldots & u_{2r} \\ 
+  u_{11} & u_{12} & \ldots & u_{1m} \\ 
+  u_{21} & u_{22} & \ldots & u_{2m} \\ 
   \vdots & \vdots & \ddots & \vdots \\ 
-  u_{m1} & u_{m2} & \ldots & u_{mr}
+  u_{r1} & u_{r2} & \ldots & u_{rm}
 \end{bmatrix}\times\begin{bmatrix} 
   \sigma_{11} & 0 & \ldots & 0 \\ 
   0 & \sigma_{22} & \ldots & 0 \\ 
   \vdots & \vdots & \ddots & \vdots \\ 
   0 & 0 & \ldots & \sigma_{rr}
 \end{bmatrix}\times\begin{bmatrix} 
-  v_{11} & v_{12} & \ldots & v_{1r} \\ 
-  v_{21} & v_{22} & \ldots & v_{2r} \\ 
+  v_{11} & v_{12} & \ldots & v_{1n} \\ 
+  v_{21} & v_{22} & \ldots & v_{2n} \\ 
   \vdots & \vdots & \ddots & \vdots \\ 
-  v_{n1} & v_{n2} & \ldots & v_{nr}
+  v_{r1} & v_{r2} & \ldots & v_{rn}
 \end{bmatrix}^{T}$$
 
-## **Importance of Normalization**
+## **Probabilistic Matrix Factorization**
 
-[Important to ensure that magnitudes of entries in the dataset matrix are appropriate, so that properties are compared in a way that accords with comparisons in the real world]
+Probabilistic matrix factorization [@Salakhutdinov-2008a] is very similar to singular value decomposition. We define the probabilistic matrix factorization as follows: 
 
-[scale all of the attribute values into roughly the same range]
+$$A = Q^{T}P$$
 
-[To address the possibly different magnitudes of different attributes, it is usual to divide the entries in each column by the standard deivation of that column]
+where predictions $\hat{a}_{ui}$ for user $u$ for item $i$,  are:
 
-[When a matrix is sparse (i.e., most of its entries are zeros), it may be more appropriate to normalzie by keeping the zero entries fixed. The mean of non-zero entires is then subtracted from the non-zero entries so that they become zero-cnetered, and only the non-zero entries are divided by the standard deviation of the column mean. The form of normalization needs to be considered carefully because it reduces the impact of zero values on the vay other values are adjusted, and so should not be used if zero values have some special significance. There is also the issue of how many non-zero entries there should be in the matrix before it is no longer considered sparse]
+$$\hat{a}_{ui} = q_i^{T}p_u$$
+where $q_i$ and $p_u$ are the latent factors for items and users respectively.
 
-# Interpretation
+Unlike the classical SVD, this matrix factorization can be applied to sparse matrices. We minimize the regularized squared error using stochastic gradient descent to estimate all of the unknowns as follows:
 
-[There are many ways to interpret the results of SVD]
+$$\sum_{a_{ui} \in A_{train}} \left(a_{ui} - \hat{a}_{ui} \right)^2 + \lambda\left(||q_i||^2 + ||p_u||^2\right)$$
+ where $a_{ui} - \hat{a}_{ui}$ is the error and $\lambda$ is the regularization parameter.
 
-[Interpretation can be difficult]
+## **Extending Probabilistic Matrix Factorization**
 
-## **Factor Interpretation**
+The probabilistic matrix factorization can be extended to include user and item specific biases ($b_u$ and $b_i$ respectively). See [@Koren-2009], [@Ricci-2010], and [@Python-Surprise] for additional details.
 
+The lower-dimensional approximation $\hat{a}_{ui}$ for $a_{ui}$ is:
 
-## **Geometric Interpretation**
-
-
-## **Component Interpretation**
-If $u_{i}$ is the $i^{th}$ column of $U$, $\sigma_{i}$ is the $i^{th}$ singular value of $\Sigma$ and $v_{i}$ us the $i^{th}$ row of V, then
-
-$$A=\sum_{i=1}^{m}{A_{i}}=\sum_{i}^{m}{u_{i}\sigma_{i}v_{i}^{T}}$$
-Each entry of $A$ can be thought of as the sum of the corresponding entries in each of the columns $A_{i}$ and the pointwise sum of the $A_{i}$
-
-# Truncated Singular Value Decomposition (SVD)
-$$A \approx U\Sigma V^{T} = \sum_{i=1}^{r}\sigma_{i}u_{i} \otimes v_{i}^{T}$$
+$$\hat{a}_{ui} = \mu + b_u + b_i + q_i^Tp_u$$
+where $q_i$ and $p_u$ are again the latent factors for items and users.
 
 ```{marginfigure}
-Here, $\otimes$ denotes the outer product. The outer product $u \otimes v$ is equivalent to a matrix multiplication $uv^{T}$, provided that $u$ is represented as a $m \times 1$ column vector and $v$ as a $n \times 1$ column vector (which makes $v^{T}$ a row vector).
+
+The bias $b_{u}$ and the latent factors $p_{u}$ are assumed to be zero if user $u$ is new. Similarly, if an item $i$ is new, the latent factors $p_{i}$ and bias $b_i$ are assumed to be zero.
 
 ```
 
-[can to MC to show this]
+The regularized squared error is minimized to find all of the unknowns as follows:
 
-In the context of 
+$$\sum_{a_{ui} \in A_{train}} \left(a_{ui} - \hat{a}_{ui} \right)^2 + \lambda\left(b_{i}^2 + b_{u}^2 + ||q_{i}||^2 + ||p_{u}||^2\right)$$
 
-$U$ is like an 'object-to-concept' similarity matrix
+The minimization is performed over all the elements ($a_{ui}$) of the matrix $A$ using stochastic gradient descent (SGD)^[These steps are performed `n_epochs` times. The baselines (i.e., $b_u$ and $b_i$) are initialized to 0. To initialize the latent user and item factors we draw from a normal distribution.]:
 
-$V$ is like a 'attribute-to-concept' similarity matrix
+$b_u \leftarrow b_u + \gamma ((a_{ui} - \hat{a}_{ui}) - \lambda b_u)$
 
-Diagonal elements of $\Sigma$ represents the 'strength` or 'importance' of each concept
+$b_i \leftarrow b_i + \gamma ((a_{ui} - \hat{a}_{ui}) - \lambda b_i)$
 
-[Create a diagram with latex]
+$p_u \leftarrow p_u + \gamma ((a_{ui} - \hat{a}_{ui}) \cdot q_i - \lambda p_u)$
+
+$q_i \leftarrow q_i + \gamma ((a_{ui} - \hat{a}_{ui}) \cdot p_u - \lambda q_i)$
+
+where $\gamma$ is the learning rate.
+
+## **Importance of Normalization**
+
+To ensure that properties are compared in a way consistent with comparisons in the real world, the magnitudes of attribute values comprising the input data matrix should be scaled into roughly the same range [@Skillicorn-2007]. It is common to divide entries in each column of a dense matrix by the standard deviation of that column.
+
+It may be more appropriate to normalize by keeping zero entries fixed when a matrix is sparse. The mean of non-zero entries is typically subtracted from the non-zero entries so that they become zero-centered. Only the non-zero entries are divided by the standard deviation of the column mean^[Normalization should not be used if zero values have some special significance.][@Skillicorn-2007].
+
+We must carefully consider the form of normalization because selecting the correct approach can significantly improve predictive performance.
 
 # Implementation
 
-Lots of approaches available
-
-Document power method
-
-
+Modern libraries implementing SVD are based on extensive research using methods more complex than the method implemented in the next section [@GolubAndLoan-2013]. In the following section, we use the simplest available approach for illustrative purposes. There are more efficient and more numerically stable methods available [@GolubAndLoan-2013].
 
 ## **Power Method**
 
 In the following sub-section, we implement singular value decomposition (SVD) in Python using the power method.
 
+Briefly, the power method for singular value decomposition of a matrix $A \in \mathbb{R}^{m \times n}$ works as follows [cite]:
 
+The algorithm starts by computing the first singular value $\sigma_{1}$ and the left and right singular vectors $u_{1}$ and $v_{1}$ of $A$, for which $\text{min}_{i > j} \text{log} (\sigma_{i}/\sigma_{j}) \ge \lambda$
+
+1. Generate $x_0$ such that $x_{0}(i) \sim \text{N(0,1)}$
+
+3. for $i$ in $[1,\dots,k]$ where $k=\text{min}(m,n)$:
+
+4. $x_{i} \leftarrow A^{T} \leftarrow Ax_{xi-1}$
+
+5. $v_{1} \leftarrow x_{i}/ \lVert x_{i} \rVert$
+
+6. $\sigma_{1} \leftarrow \lVert Av_{1} \rVert$
+
+7. $u_{1} \leftarrow Av_{1}/\sigma{1}$
+
+8. return $\left(\sigma_{1},u_{1},v_{1}\right)$
+
+Once we have computed $\left(\sigma_{1},u_{1},v_{1}\right)$, we can repeat this process for $A - \sigma_{1}u_{1}v_{1}^{T} = \sum_{i=2}^{n}\sigma_{i}u_{i}v_{i}^{T}$. We effectively iterate through this process until $i$ = $k$.
 
 ```{python,echo=FALSE}
 # import python packages
 import numpy as np
 from numpy.linalg import norm
 
-from random import normalvariate
+import random
 from math import sqrt
+
+# set random seed
+randomSeed = 12345678
 
 ```
 
@@ -188,7 +219,7 @@ First, we define a function to create a random unit vector:
 
 ```{python,echo=TRUE}
 def randomUnitVector(n):
-    unnormalized = [normalvariate(0, 1) for _ in range(n)]
+    unnormalized = [random.normalvariate(0, 1) for _ in range(n)]
     theNorm = sqrt(sum(x * x for x in unnormalized))
     return [x / theNorm for x in unnormalized]
 
@@ -300,7 +331,7 @@ def svdPowerMethod(A, k=None, epsilon=1e-10):
 
 ```
 
-# Validation
+## **Validation**
 
 In this section, we validate the results of our implementation.
 
@@ -327,7 +358,9 @@ m,n = A.shape
 Create a random unit vector:
 
 ```{python}
-# 
+# set random seed
+random.seed(randomSeed)
+np.random.seed(randomSeed)
 
 # build random unit vector
 x = randomUnitVector(min(m,n))
@@ -344,6 +377,10 @@ print(x)
 To compute the full-rank decomposition of the `r py$m` by `r py$n` matrix $A$ we call the `svdPowerMethod(A)` function:
 
 ```{python,echo=TRUE}
+# set random seed
+random.seed(randomSeed)
+np.random.seed(randomSeed)
+
 # compute SVD
 singularValues,U,V = svdPowerMethod(A)
 
@@ -377,7 +414,7 @@ print(V)
 
 ```
 
-Finally, we reconstitute the matrix $A$:
+We reconstitute the matrix $A$:
 
 ```{python,echo=TRUE}
 # reconstitute matrix A
@@ -408,8 +445,12 @@ We check our own implement of SVD against the `numpy.linalg.svd()` implementatio
 
 ```{python,echo=TRUE}
 from numpy.linalg import svd
-U_np,singularValues_np,V_np = svd(A,full_matrices=False)
 
+# set random seed
+random.seed(randomSeed)
+np.random.seed(randomSeed)
+
+U_np,singularValues_np,V_np = svd(A,full_matrices=False)
 
 ```
 
@@ -436,9 +477,7 @@ print(V_np)
 
 ```
 
-The 
-
-We again reconstitute the matrix $A$, this time using the output from `numpy.linalg.svd()` and display the differences between the original and reconstituted matrices:
+We again reconstitute the matrix $A$ - this time using the output from `numpy.linalg.svd()` - and display the differences between the original and reconstituted matrices:
 
 ```{python,echo=TRUE}
 # reconstitute matrix A
@@ -467,33 +506,408 @@ print(np.round(V-V_np, decimals=2))
 
 ```
 
-We do not expect the left and right singular vectors to be the same because these the solution is not unique, however, much of $U$ and $V$ are close.
+We do not expect the left and right singular vectors to be the same because for these the solution is not unique. However, both implementations can be used to reconstitute the original matrix as expected.
+
+Thus far, we have shown results from the full-rank decomposition. In many applications of SVD - including those involving recommender systems - our objective is to map a sparse high- dimensional space to a dense low-dimensional space. For example, if we have a large user-by-item explicit ratings matrix, we may want to create a more compact representation of that ratings space using linearly independent latent factors. We can think of the latent factors as an abstraction that allows us to represent each user and item by a linear combination of other users and items. Classical SVD is one approach to solve for such latent factors, but unfortunately it can only be applied to a dense matrix.
+
+Using independent latent factors often simplifies the interpretation of large datasets because it drastically reduces the number of interacting variables.
+
+Using the same toy dataset as above, we can illustrate these concepts more concretely.
+
+We perform the matrix decomposition for the largest $k$ singular values, then reconstitute the matrix using only the associated $k$ latent user and item factors:
+
+
+```{python,echo=TRUE}
+# set random seed
+random.seed(randomSeed)
+np.random.seed(randomSeed)
+
+# compute SVD
+kSingularValues,kU,kV = svdPowerMethod(A,k=2)
+
+```
+
+We reconstitute the approximate matrix $\hat{A}$ using $k$ factors (in this case, just two user factors and two item factors):
+
+```{python,echo=TRUE}
+print(kU.shape)
+
+```
+
+```{python,echo=TRUE}
+print(kSingularValues.shape)
+
+```
+
+```{python,echo=TRUE}
+print(kV.shape)
+
+```
+
+```{python,echo=TRUE}
+# reconstitute matrix A
+kSigma = np.diag(kSingularValues)
+# reconstitute matrix A
+kAA=np.dot(kU, np.dot(kSigma, kV))
+
+```
+
+We can compare the original matrix $A$ and the two-factor approximation to that matrix $\hat{A}$:
+
+```{python,echo=TRUE}
+print(AA)
+
+```
+
+```{python,echo=TRUE}
+print(kAA)
+
+```
+
+Despite the use of an extremely small dataset, the two-factor approximation looks reasonable.
+
+## **Limitations**
+
+Before we move on to an application of matrix factorization in a recommender system, we need to consider the limitations of our simple implementation of SVD. This approach requires that our input matrix $A$ is dense with no missing elements. In many applications, we do not have any missing data. Unfortunately, for the application outlined in the next section, we are working with very sparse data, namely movie ratings data. In this application, we have many users that have not rated specific movies.
+
+To address the issue with missing data, we can either impute the missing data, or we can use an approach that does not require the user-by-item ratings matrix to be dense. There are many ways to impute missing data, but this approach is not our preferred method for our application because it often leads to biased results. In fact, our objective is to infer the missing values in a way that improves the accuracy of our ratings predictions. Instead, in the next section, we generate recommendations using a third-party library implementation of an SVD-inspired matrix factorization approach that rolls $\Sigma$ into $U$ and $V$ and solves for the latent factors using stochastic gradient descent (SGD). This approach - albeit more complex than the simpler methods for imputing missing data (e.g., filling missing values with zeros) - tends to lead to better results in practice.
+
 
 # Applications: Recommender Systems
 
-Map query into a latent factor or 'concept space'
-
-## **Transaction Analytics**
-
-
+Now that we have validated our simple implementation of singular value decomposition, we move to an application of on SVD-like matrix factorization to making movie recommendations based on a sparse user-by-movie ratings matrix. Although implementations of these more advanced methods are not overly complex, they are beyond the scope of this project.
 
 ## **Ratings **
 
-movielens dataset?
+In the last project, we created our own functions to download the movielens dataset [@MovieLens]. We re-use these functions to acquire the required data, then we explore a matrix factorization inspired by SVD in the following sub-sections.
+
+```{python,echo=TRUE}
+# import packages
+import requests
+import zipfile
+import pandas as pd
+from collections import defaultdict
+
+# import from Surprise package
+from surprise import Reader, Dataset, SVD, accuracy
+from surprise.model_selection import cross_validate
+from surprise.model_selection import GridSearchCV
+from surprise.model_selection import train_test_split
+# import python packages
+import numpy as np
+from numpy.linalg import norm
+
+import random
+from math import sqrt
+
+# set random seed
+randomSeed = 12345678
+
+```
+
+We define a function to download the movielens data:
+
+```{python,echo=TRUE}
+# function to download movielens data
+def download(download_url, download_path):
+
+    req = requests.get(download_url, stream=True)
+
+    with open(download_path, 'wb') as fd:
+        for chunk in req.iter_content(chunk_size=2**20):
+            fd.write(chunk)
+
+```
+
+We download the data:
+
+```{python,echo=TRUE}
+# define downlad file name
+downloadFile='ml-100k.zip'
+
+# define download path
+#download_path='/projects/ms/github/DATA_612/Project_2/ml-100k.zip'
+download_path='F:/Dropbox/projects/ms/github/DATA_612/Project_3/data/ml-100k.zip'
+
+# define download URL
+download_url='http://files.grouplens.org/datasets/movielens/ml-100k.zip'
+# dowload movielens data
+download(download_url, download_path)
+
+```
+
+We extract the data from the zip file and read it into memory:
+
+```{python,echo=TRUE}
+# define unzip path
+unzip_path='F:/Dropbox/projects/ms/github/DATA_612/Project_3/data/'
+# unzip movielens data
+zf = zipfile.ZipFile(download_path)
+# extract user by item file
+user_by_item_file=zf.extract('ml-100k/u.data', unzip_path)
+# extract title by item file
+title_by_item_file=zf.extract('ml-100k/u.item', unzip_path)
+
+# read user by item
+df_user_by_item = pd.read_csv(user_by_item_file, sep='\t',
+    header=None,names=['user_id','item_id','rating',
+    'titmestamp'])
+# read title by item
+df_title_by_item = pd.read_csv(title_by_item_file, sep='|',
+    encoding='latin-1',header=None,usecols=[0,1],
+    names=['item_id','title'])
+# join ratings by user and item to title
+df = pd.merge(df_title_by_item,df_user_by_item, 
+  on='item_id')
+
+```
+
+We create the data object required for the modeling below as follows:
+
+```{python,echo=TRUE}
+# load reader library
+reader = Reader()
+# load ratings dataset with Dataset library
+data = Dataset.load_from_df(df[['user_id', 'item_id',
+  'rating']], reader)
+
+```
+
+We set the random seed to ensure that our results are comparable across models and parameters and perform 5-fold cross validation using default parameters.
+
+```{python,echo=TRUE}
+random.seed(randomSeed)
+np.random.seed(randomSeed)
+
+# select SVD algorithm
+algo = SVD()
+
+# compute RMSE and MAE of SVD algorithm using 5-fold cross 
+# validation
+result=cross_validate(algo, data, measures=['RMSE', 'MAE'], 
+    cv=5, verbose=True,return_train_measures=True)
+# extract mean test RMSE
+meanTestRMSE=result[ 'test_rmse'].mean()
+```
+
+Now we define a function to return the top-N recommendations for each user from a set of predictions:
+
+```{python,echo=TRUE}
+def get_top_n(predictions, n=10):
+    # return top-N recommendations for each user from 
+    # a set of predictions.
+    #
+    # predictions(list of Prediction objects): list of 
+    #   predictions, as returned by test method of an 
+    #   algorithm.
+    # n(int): number of recommendation to output for each 
+    #   user
+
+    # First map predictions to each user
+    top_n = defaultdict(list)
+    for uid, iid, true_r, est, _ in predictions:
+        top_n[uid].append((iid, est))
+
+    # sort predictions for each user and retrieve 
+    # k highest ones
+    for uid, user_ratings in top_n.items():
+        user_ratings.sort(key=lambda x: x[1], 
+          reverse=True)
+        top_n[uid] = user_ratings[:n]
+
+    # return dict where keys are user (raw) ids and 
+    # values are lists of tuples:
+    # [(raw item id, rating estimation), ...] of size n.
+    return top_n
+
+```
+
+We perform a grid search to see if parameter tuning has a large impact on the cross-validation
+results.
+
+```{python,echo=TRUE}
+random.seed(randomSeed)
+np.random.seed(randomSeed)
+# select best algo with grid search
+print('Grid Search...')
+param_grid = {'n_epochs': [10, 20, 30], 
+    'lr_all': [0.002, 0.005, 0.01,0.015,0.02,0.05],
+    'biased' : [True,False]}
+grid_search = GridSearchCV(SVD, param_grid, measures=['rmse'], 
+  cv=5)
+
+random.seed(randomSeed)
+np.random.seed(randomSeed)
+# fit using best model
+grid_search.fit(data)
+# use best from grid search
+algo = grid_search.best_estimator['rmse']
+bestRMSE = grid_search.best_score['rmse']
+
+```
+
+```{r,echo=FALSE}
+bestRMSE<-py$bestRMSE
+meanTestRMSE<-py$meanTestRMSE
+```
+
+Based on the grid search performance, our best mean RMSE is `r round(bestRMSE,4)` across all 5-folds as compared to an RMSE of `r round(meanTestRMSE,4)` using the default setting.
+
+```{python,echo=TRUE}
+# create dataframe
+results_df = pd.DataFrame.from_dict(grid_search.cv_results)
+# extract required columns
+results_table=results_df[['param_biased','param_lr_all',
+    'param_n_epochs','mean_test_rmse','split0_test_rmse',
+    'split1_test_rmse','split2_test_rmse','split3_test_rmse',
+    'split4_test_rmse']].sort_values(by=['mean_test_rmse'])
+columnMap={'param_biased' : 'biased',
+    'param_lr_all' : 'lr_all',
+    'param_n_epochs' : 'n_epochs',
+    'mean_test_rmse' : 'Mean',
+    'split0_test_rmse' : 'Fold 1', 
+    'split1_test_rmse' : 'Fold 2',
+    'split2_test_rmse' : 'Fold 3', 
+    'split3_test_rmse' : 'Fold 4',
+    'split4_test_rmse' : 'Fold 5'}
+results_table.rename(columns=columnMap,inplace=True)
+
+```
+
+```{r,echo=FALSE}
+rResultsTable<-py$results_table
+captionTitle<-"Cross Validation Grid Search Results"
+kable(rResultsTable,format='latex', longtable = T,
+  linesep = "",caption = captionTitle,
+  booktabs = T) %>% 
+  kable_styling(latex_options = c("repeat_header"))
+
+```
+
+- The 'biased' column indicates whether we include biases $b_i$ an and $b_u$ in our model (i.e., whether or not we use probabilistic matrix factorization or the extended probabilistic matrix factorization).
+
+- 'lr_all' is parameter is the learning rate
+
+Now, that we have looked at the 5-fold cross validated performance for a range of parameters, we demonstrate how the model can be used to produce recommendations.
+
+```{python,echo=TRUE}
+# define training / testing split
+testTrainSplit=0.75
+
+```
+
+```{r,echo=FALSE}
+ttSplit<-py$testTrainSplit
+```
+
+We train an extended probabilistic matrix factorization model in-sample using `r round(ttSplit*100,0)`% of the data, then we generate recommendations for all of the out-of-sample users.
+
+```{python,echo=TRUE}
+random.seed(randomSeed)
+np.random.seed(randomSeed)
+
+# sample random trainset and testset
+# test set is made of 75% of the ratings.
+trainset, testset = train_test_split(data, test_size=testTrainSplit)
+# create predictions from
+algo.fit(trainset)
+predictions = algo.test(testset)
+accuracy.rmse(predictions)
+
+```
+
+```{python,echo=TRUE}
+# define top N 
+topN=10
+
+```
+
+```{r,echo=FALSE}
+topN<-py$topN
+
+```
+
+We now find the top `r topN` recommendations for the test set:
+
+```{python,echo=TRUE}
+iid='item_id'
+# map item id to title 
+item2Title=df_title_by_item.set_index(iid)['title'].to_dict()
+# get top 10 recommendation for each user
+top_n = get_top_n(predictions, n=topN)
+# extract top N recommendations for each user
+listTopN=list()
+for uid, user_ratings in top_n.items():
+    listTopN.append([uid,[item2Title[int(iid)] for (iid, 
+    _) in user_ratings]])
+# convert to dataframe
+dfTopN=pd.DataFrame(listTopN)
+# rename columns
+dfTopN.rename(columns={0 : 'user_id',1 : 'recommendations'},
+    inplace=True)
+# set index to user ID
+dfTopN=dfTopN.set_index('user_id')
+
+```
+
+We can test the recommendations out-of-sample. We can predict the rating for an item by a user that was not part of the training set and compare that prediction with their actual rating. 
+
+```{python,echo=TRUE}
+# define raw user id (string)
+user_id = str(531)
+# define raw item id (string)
+item_id = str(421)  
+trueRating=4.0
+# get a prediction for specific users and items.
+pred = algo.predict(user_id, item_id, r_ui=trueRating, 
+  verbose=True)
+print(pred)
+
+```
+
+
+
+```{python,echo=TRUE}
+print(dfTopN.head())
+
+```
+
+We extract the top `r topN` recommendations for an example user as follows:
+
+```{python,echo=TRUE}
+# define example user
+user_id=5
+# extract top N recommendations for example user
+recommendationList=dfTopN['recommendations'].loc[user_id]
+
+```
+
+Finally, here are the recommendations:
+
+```{python,echo=TRUE}
+sampleRecommendations=pd.DataFrame(recommendationList,
+  columns=['recommendations'])
+print(sampleRecommendations)
+
+```
+
+Although we have not delved into measures beyond the root mean squared error to understand the utility of these recommendations to our users, there are many more techniques that can be used to help us understand our data once we have the latent factor loadings.
 
 # Software
 
-This discussion post was created using base R [@R-base] and the R markdown [@R-rmarkdown], tint [@R-tint], kableExtra [@R-kableExtra], reticulate, [@R-reticulate], and tidyverse [@R-tidyverse] libraries.
+This project was created using base R [@R-base] and the R markdown [@R-rmarkdown], tint [@R-tint], kableExtra [@R-kableExtra], reticulate, [@R-reticulate], and tidyverse [@R-tidyverse] libraries. Anaconda Python [@Anaconda] was used for most of the implementation code and relied considerably on the scientific python stack (particularly [@numpy-2006], [@numpy-2011],[@sklearn-2011], [@pandas-2010] and all of their respective dependencies)
 
-# References
+Finally, the implementation of the power method for SVD relied heavily on [lecture notes](http://www.cs.yale.edu/homes/el327/datamining2013aFiles/07_singular_value_decomposition.pdf) and code [@j2kunSVD] available on the internet. The Surprise Python package [@Python-Surprise] was used to perform probabilistic matrix factorization in the application section of the paper. This package can be installed with conda as follows:
 
+conda install -c conda-forge scikit-surprise
 
+```{r bib,echo=FALSE,include=TRUE,eval=FALSE}
+# define packages used
+packagesUsed<-c('base', 'rmarkdown','reticulate',
+  'tidyverse','tufte','tint','kableExtra')
 
-
-
-```{r bib, include=TRUE}
 # create a bib file for the R packages used in this document
-knitr::write_bib(c('base', 'rmarkdown'), file = 'skeleton.bib')
+knitr::write_bib(packagesUsed, file = 'skeleton.bib')
 ```
 
 \pagebreak
@@ -533,9 +947,3 @@ $$A^{T}A=V \Sigma^{T} U^{T} \left( U \Sigma V^{T}\right)=V \Sigma \Sigma^{T} V^{
 The right-hand sides of the two relations expressed above (namely equation blaw1 and blaw2), describe the eigen-decompositions of the left-hand sides. The columns of V (i.e., the right-singular vectors) are the eigenvectors of $A^{T}A$ (i.e., $V=X$ and $V^{T}=X^{T}$). The columns of U (i.e., the left-singular vectors) are the eigenvectors of $AA^{T}$ (i.e., $U=X$). The non-zero elements of $\Sigma$ (i.e., the non-zero singular values) are the square roots of the non-zero eigenvalues of $A^{T}A$ or $AA^{T}$ (i.e., $\Sigma \Sigma ^{T}=\Lambda$). This means that the eigenvalues are equivalent to the squared singular values (i.e., $\lambda_{i}=\sigma_{i}^{2}$.
 
 Substituting these into the equation immediately above, we get $A=X \Lambda X^{T}$.
-
-
-
-Now we use R to perform a quick check of these relationships
-
-[Show all of this with a numerical example using a ratings matrix]
