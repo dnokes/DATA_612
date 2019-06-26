@@ -50,7 +50,7 @@ use_python(pythonDirectory)
 
 # Introduction
 
-Matrix factorizations are ubiquitous in modern data science. Our need to convert big data into a smaller set of latent factors grows as the amount of data we collect increases. In this project, we provide a brief overview of singular value decomposition (SVD) and a set SVD-like matrix factorizations. We implement the simple power method to do SVD on a dense matrix, then we move to a recommender system application on a sparse dataset using probabilistic matrix factorization (with and without biases).
+Matrix factorizations are ubiquitous in modern data science. Our need to convert big data into a smaller set of latent factors grows as the amount of data we collect increases. In this project, we provide a brief overview of singular value decomposition (SVD) and a set of SVD-like matrix factorizations. We implement the simple power method to do SVD on a dense matrix, then we move to a recommender system application on a sparse dataset using probabilistic matrix factorization (with and without biases).
 
 # Theory: Singular Value Decomposition (i.e., Spectral Decomposition) and Related Matrix Factorizations
 
@@ -170,7 +170,7 @@ where $\gamma$ is the learning rate.
 
 To ensure that properties are compared in a way consistent with comparisons in the real world, the magnitudes of attribute values comprising the input data matrix should be scaled into roughly the same range [@Skillicorn-2007]. It is common to divide entries in each column of a dense matrix by the standard deviation of that column.
 
-It may be more appropriate to normalize by keeping zero entries fixed when a matrix is sparse. The mean of non-zero entries is typically subtracted from the non-zero entries so that they become zero-centered. Only the non-zero entries are divided by the standard deviation of the column mean^[Normalization should not be used if zero values have some special significance.][@Skillicorn-2007].
+It may be more appropriate to normalize by keeping zero entries fixed when a matrix is sparse. The mean of non-zero entries is typically subtracted from the non-zero entries so that they become zero-centered. Only the non-zero entries are divided by the standard deviation of the column mean^[This normalization should not be used if zero values have some special significance.][@Skillicorn-2007].
 
 We must carefully consider the form of normalization because selecting the correct approach can significantly improve predictive performance.
 
@@ -182,7 +182,7 @@ Modern libraries implementing SVD are based on extensive research using methods 
 
 In the following sub-section, we implement singular value decomposition (SVD) in Python using the power method.
 
-Briefly, the power method for singular value decomposition of a matrix $A \in \mathbb{R}^{m \times n}$ works as follows [cite]:
+Briefly, the power method for singular value decomposition of a matrix $A \in \mathbb{R}^{m \times n}$ works as follows [@j2kunSVD]:
 
 The algorithm starts by computing the first singular value $\sigma_{1}$ and the left and right singular vectors $u_{1}$ and $v_{1}$ of $A$, for which $\text{min}_{i > j} \text{log} (\sigma_{i}/\sigma_{j}) \ge \lambda$
 
@@ -895,7 +895,7 @@ Although we have not delved into measures beyond the root mean squared error to 
 
 # Software
 
-This project was created using base R [@R-base] and the R markdown [@R-rmarkdown], tint [@R-tint], kableExtra [@R-kableExtra], reticulate, [@R-reticulate], and tidyverse [@R-tidyverse] libraries. Anaconda Python [@Anaconda] was used for most of the implementation code and relied considerably on the scientific python stack (particularly [@numpy-2006], [@numpy-2011],[@sklearn-2011], [@pandas-2010] and all of their respective dependencies)
+This project was created using base R [@R-base] and the R markdown [@R-rmarkdown], tint [@R-tint], kableExtra [@R-kableExtra], reticulate, [@R-reticulate], and tidyverse [@R-tidyverse] libraries. Anaconda Python [@Anaconda] was used for most of the implementation code and relied considerably on the scientific Python stack ([@numpy-2006], [@numpy-2011],[@sklearn-2011], [@pandas-2010] and all of their respective dependencies).
 
 Finally, the implementation of the power method for SVD relied heavily on [lecture notes](http://www.cs.yale.edu/homes/el327/datamining2013aFiles/07_singular_value_decomposition.pdf) and code [@j2kunSVD] available on the internet. The Surprise Python package [@Python-Surprise] was used to perform probabilistic matrix factorization in the application section of the paper. This package can be installed with conda as follows:
 
@@ -914,7 +914,7 @@ knitr::write_bib(packagesUsed, file = 'skeleton.bib')
 
 # Appendix A: Singular Value Decomposition (SVD) Relation to Eigen-Decomposition
 
-The singular value decomposition (SVD) can be applied to any $m \times n$ matrix, whereas the eigen-decomposition can be applied only to *diagonalizable matrices*^[A diagonalizable matrix is one where blaw blaw]. In this appendix, we briefly outline the relationship between SVD and the less general eigen-decomposition.
+The singular value decomposition (SVD) can be applied to any $m \times n$ matrix, whereas the eigen-decomposition can be applied only to *diagonalizable matrices*. In this appendix, we briefly outline the relationship between SVD and the less general eigen-decomposition.
 
 Recall that for any singular value decomposition (SVD)
 
