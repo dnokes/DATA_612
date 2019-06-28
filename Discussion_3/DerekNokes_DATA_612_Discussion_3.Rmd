@@ -1,0 +1,70 @@
+---
+title: "DATA 612: Discussion 3"
+subtitle: "Equal Opportunity by Design"
+author: "Derek G. Nokes"
+date: "`r Sys.Date()`"
+output: tint::tintPdf
+bibliography: skeleton.bib
+link-citations: yes
+---
+
+```{r setup, include=FALSE}
+# import R packages
+library(kableExtra)
+library(tidyverse)
+library(tufte)
+library(tint)
+# invalidate cache when the package version changes
+knitr::opts_chunk$set(tidy = FALSE, cache.extra = packageVersion('tint'))
+options(htmltools.dir.version = FALSE)
+```
+
+# Introduction
+
+**As more systems and sectors are driven by predictive analytics, there is increasing awareness of the possibility and pitfalls of algorithmic discrimination.** 
+
+## **Human Bias & Recommender Systems**
+
+According to Milano, Taddeo, and Floridi of the Oxford Internet Institute, any aspect of a recommender system that could impact negatively the utility of any of its stakeholders, or risk imposing such negative impacts, constitutes a feature that is ethically relevant.
+
+Rights are usually taken to provide qualitative constraints on actions, while the concept of utility can be made operational using quantifiable metrics. We can identify two ways in which a recommender system can have ethical impacts when viewing these systems through the lens of actions and consequences.
+
+The ethical issues caused by recommender systems can be categorized broadly along (at least) two dimensions: 
+
+i)  whether a given feature of a recommender system negatively impacts the utility of some of its stakeholders or, instead, constitutes a rights violation, which is not necessarily measured in terms of utility; and  
+
+ii)  whether the negative impact constitutes an immediate harm or it exposes the relevant party to future risk of harm or rights violation.  
+
+Discrimination is a serious problem and constitutes a rights violation and it can be difficult to detect in recommender systems where the underlying algorithmic structure is not disclosed to the public. It seems to me that finding systematic discrimination should be easier when one has a system to analyze and thus there must be a mechanism that can compel businesses that use recommender systems to disclose the algorithmic structure of these systems to authorities under some circumstances.
+
+
+**In what ways do you think Recommender Systems reinforce human bias?**
+
+
+The potential for discrimination exists at every human interaction, whether it is human-to-human or human-to-machine. Increasingly, recommender systems determine what information is available to us in our digital world. In the same way that our own historical experience - and the historical experience of those trusted individuals around us - provide the context that shapes our interpretation of world, recommender systems also rely on past behavior. Relying on historical experience when it is too narrow always leads to bias and this bias can be very harmful. A diversity of opinion can be uncomfortable, but it is through interactions with both similar and dissimilar communities that we are exposed to the new ideas that we need to grow as people. We have to develop recommender systems in a way that protects all of the users' fundamental rights.
+
+## Reccommender Systems and Unethical Targeting or Customer Segmentation
+
+
+**Reflecting on the techniques we have covered, do you think recommender systems reinforce or help to prevent unethical targeting or customer segmentation?  Please provide one or more examples to support your arguments.**
+
+
+Sometimes recommender systems reinforce unethical targeting / customer segmentation and sometimes they do not. There is the potential to do great harm. The designers and maintainers of these systems have a responsibility to uphold our fundamental legal rights. We must be able to hold the creates and maintainers of these systems to account if these systems can be shown to violate these rights. Making platform providers accountable for right-violating recommender systems would seem to be a prerequisite for motivating responsible system development.
+
+Meetup, for example, uses data segregation and ensemble models to control the interaction of potentially discriminatory features with other features. Carefully designed randomized testing can also be used to find discrimination embedded in recommended systems so that it can be eliminated. This serves as an example of responsible recommender system development. Meetup actively works to reduce discrimination in their recommendations.
+
+Given some of the negative aspects of recommender systems that have been uncovered over the years, it is easy to lose sight of the massive benefits that have also accrued to our society. We should perhaps reflect on the enormous good that recommender systems have also brought to our lives. For me personally, I have used internet-based search and recommender systems to further my own education. The pace of our learning has surely accelerated and this has implications. Whether we are working on curing disease or finding more efficient ways to get people hooked on using a particular platform. 
+
+There is considerable evidence that there are technical solutions to many of the issues related to discrimination by recommender systems. Motivating the development and use of these solutions is likely to be a key piece in reversing some of the negative effects of recommender systems observed over the years since they were created.
+
+# References
+
+https://www.wired.com/story/creating-ethical-recommendation-engines/
+
+https://philarchive.org/archive/MILRSA-3v1
+
+https://www.wired.com/story/creating-ethical-recommendation-engines/
+
+https://www.youtube.com/watch?v=MqoRzNhrTnQ
+
+https://arxiv.org/pdf/1610.02413.pdf
