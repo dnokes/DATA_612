@@ -1,0 +1,40 @@
+---
+title: "DATA 612: Discussion 3"
+subtitle: "Equal Opportunity by Design"
+author: "Derek G. Nokes"
+date: "`r Sys.Date()`"
+output: tint::tintPdf
+bibliography: skeleton.bib
+link-citations: yes
+---
+
+```{r setup, include=FALSE}
+# import R packages
+library(kableExtra)
+library(tidyverse)
+library(tufte)
+library(tint)
+# invalidate cache when the package version changes
+knitr::opts_chunk$set(tidy = FALSE, cache.extra = packageVersion('tint'))
+options(htmltools.dir.version = FALSE)
+```
+
+# Discussion
+
+**How do we counter the radicalizing effects of recommender systems or ways to prevent algorithmic discrimination?**
+
+Many recommenders have been designed with the objective of maximizing the amount of time consumers spend on their platforms. It thus is not surprising that many of these systems have discovered from the data they have collected that extreme content engages people. If recommender systems truly are radicalizing groups within our communities - and there is some  [evidence](https://www.wired.com/story/creating-ethical-recommendation-engines/) that this is the case - we need a way to bring people back together. From my perspective there are a several pieces to a solution. 
+
+Firstly, just as algorithms can be used to help people find communities of people with similar beliefs, constantly filtering content so that it aligns with our recently held beliefs or even pushes us to more extreme content, algorithms can also help us find common ground. We can likely make social cohesion an objective embedded within our recommender systems. 
+
+Secondly, many religions teach forgiveness. I think that the ability to forget is important to learning. We need our algorithms to have the option of having a selective memory. More importantly, consumers should have the right to wipe the memory of the algorithms serving them content.
+
+Finally, businesses using recommender systems likely must be incentivized to act ethically. There are many ways to create incentives, but voluntary algorithmic transparency should be rewarded and in some cases,  it should probably be mandated by our governments.
+
+# References
+
+https://www.wired.com/story/creating-ethical-recommendation-engines/
+
+https://www.nytimes.com/2018/03/10/opinion/sunday/youtube-politics-radical.html
+
+https://goldberg.berkeley.edu/pubs/sanjay-recsys-v10.pdf
