@@ -1,6 +1,6 @@
 ---
-title: "DATA 612: Discussion 3"
-subtitle: "Equal Opportunity by Design"
+title: "DATA 612: Discussion 4"
+subtitle: "The Radicalizing Effects of Recommender Systems"
 author: "Derek G. Nokes"
 date: "`r Sys.Date()`"
 output: tint::tintPdf
@@ -29,7 +29,7 @@ Firstly, just as algorithms can be used to help people find communities of peopl
 
 Secondly, many religions teach forgiveness. I think that the ability to forget is important to learning. We need our algorithms to have the option of having a selective memory. More importantly, consumers should have the right to wipe the memory of the algorithms serving them content.
 
-Finally, businesses using recommender systems likely must be incentivized to act ethically. There are many ways to create incentives, but voluntary algorithmic transparency should be rewarded and in some cases,  it should probably be mandated by our governments.
+Finally, businesses using recommender systems likely must be incentivized to act ethically. There are many ways to create incentives, but voluntary algorithmic transparency should be rewarded and in some cases, it should be mandated by our governments.
 
 # References
 
