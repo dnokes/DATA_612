@@ -1,0 +1,441 @@
+---
+title: 'Recommender Systems In Context: Singular Value Decomposition'
+author: "Derek G Nokes"
+date: "July 7, 2019"
+output:
+  beamer_presentation:
+    incremental: false
+---
+
+```{r setup, include=FALSE,echo=FALSE}
+# import R packages
+library(kableExtra)
+library(reticulate)
+library(tidyverse)
+```
+
+# Introduction
+
+ - Matrix factorizations are ubiquitous in modern data science
+ 
+ - Our need for tools that can map a high dimensional space into a lower dimensional space of latent factors grows as the amount of data we collect increases
+ 
+- Provide a brief overview of singular value decomposition (SVD) 
+
+- Walk through simple power method implementation for SVD on a dense matrix
+
+# Theory: Singular Value Decomposition (i.e., Spectral Decomposition)
+
+The singular value decomposition (SVD) of a matrix $A$ with $m$ rows and $n$ columns is
+
+$$A=U\Sigma V^{T} = \sum_{i}\sigma_{i}u_{i}\circ v_{i}^{T}$$
+
+where
+
+- $A$ = $m \times n$ input data matrix ($A \in \mathbb{R}^{m \times n}$)
+
+- $r$ = rank of matrix $A$ (i.e., the number of linearly independent columns of $A$). 
+
+- $U$ = $m \times r$ matrix of left singular vectors
+
+- $\Sigma$ = $r \times r$ diagonal matrix
+
+- $V$ = $n \times r$ matrix of right singular vectors. The superscript $T$ indicates the transpose of matrix $V$.
+
+# Singular Value Decomposition (SVD) - Visualized
+
+![](F:\Dropbox\projects\ms\github\DATA_612\In_Context\SVD_diagram.PNG) 
+
+- If $A$ has rank $r$, then $U$ is $m \times r$, $\Sigma$ is an $r \times r$ diagonal matrix with non-negative, non-increasing entries (i.e., sorted from largest to smallest), $V$ is $n \times r$ and $V^{T}$ is $r \times n$.
+
+- $U$ and $V$ are *column orthonormal*
+
+- By *column orthonormal*, we mean that $U^{T}U=I$ and $V^{T}V=I$, where $I$ is an identity matrix
+
+- Two vectors $u$ and $v$ whose dot product is $u \cdot v=0$ (i.e., the vectors are perpendicular) are said to be orthogonal
+
+#
+
+![](F:\Dropbox\projects\ms\github\DATA_612\In_Context\SVD_diagram_3.PNG)
+
+- This is key to the algorithm we will implement later
+
+# Why Does Orthogonal Matter - Too Many Moving Parts
+
+```{r,echo=FALSE}
+nParametersInC <- function (I){
+  #
+  nParameters<-(I*(I+1))/2
+  nParameters
+}
+
+```
+
+
+
+```{r,echo=FALSE,fig.height=2,fig.width=5}
+# create a graph to illustrate number of model parameters by number of instruments
+nParametersInCDf<-data.frame(x=1:100,y=nParametersInC(1:100))
+# create a plot of the required gain to recover from DD
+ggplot(nParametersInCDf, aes(x=x, y=y)) + geom_line() + 
+  ggtitle('# of Model Parameters By # of Things')+
+  xlab('# of Things')+
+  ylab('# of Model Parameters')
+
+```
+
+- Number of independent parameters to be estimated grows with square of number of things
+
+- Number of data points available to estimate a covariance matrix grows only linearly with number of things
+
+- Larger the number of things, the more data we typically need to estimate reliably
+
+# Importance of Normalization
+
+-- Magnitudes of attribute values comprising input data matrix should be scaled into roughly same range [Skillicorn 2007]
+
+-- Want to ensure that properties are compared in a way consistent with real world
+
+- i.e., if measure some attributes in inches and others in miles, magnitude of numbers cannot be compared without rescaling
+
+- Common to divide entries in each column of a dense matrix by standard deviation of that column
+
+-- May be more appropriate to normalize by keeping zero entries fixed when a matrix is sparse
+
+- Mean of non-zero entries is typically subtracted from non-zero entries so that they become zero-centered
+
+- Only non-zero entries are divided by standard deviation of the column mean
+
+# Importance of Normalization - Continued
+
+-- Must carefully consider form of normalization because selecting correct approach can significantly improve predictive performance
+
+# Implementation
+
+- Modern libraries implementing SVD are based on extensive research using methods more complex than the method we are going to walk through here [GolubAndLoan 2013]
+
+- Use simplest available approach for illustrative purposes
+
+- There are more efficient and more numerically stable methods available [GolubAndLoan 2013]
+
+```{python,echo=FALSE}
+# import python packages
+import numpy as np
+from numpy.linalg import norm
+
+import random
+from math import sqrt
+
+# set random seed
+randomSeed = 12345678
+
+```
+
+# Sample Data
+
+```{python,echo=TRUE}
+# create sample matrix
+A = np.array([
+  [4, 1, 1],
+  [2, 5, 3],
+  [1, 2, 1],
+  [4, 5, 5],
+  [3, 5, 2],
+  [2, 4, 2],  
+  [5, 3, 1],
+  [2, 2, 5],
+  ], dtype='float64')
+
+# determine n rows and m columns
+m,n = A.shape
+print("A is a "+str(m)+", x "+str(n)+" matrix")
+```
+
+# Random Unit Vector
+
+First, we define a function to create a random unit vector:
+
+```{python,echo=TRUE}
+def randomUnitVector(n):
+    unnormalized = [random.normalvariate(0, 
+      1) for _ in range(n)]
+    xNorm = sqrt(sum(x * x for x in unnormalized))
+    return [x / xNorm for x in unnormalized]
+
+```
+
+Create a random unit vector:
+
+```{python,echo=FALSE}
+# set random seed
+random.seed(randomSeed)
+np.random.seed(randomSeed)
+```
+
+
+```{python}
+# build random unit vector
+x = randomUnitVector(min(m,n))
+print(np.round(x,4))
+```
+
+# One-Dimensional SVD
+
+```{python,echo=TRUE}
+def svdPowerMethod_1d(A, epsilon=1e-10):
+    m, n = A.shape
+    x = randomUnitVector(min(m,n))
+    lastV = None
+    V = x
+    if m > n:
+        B = np.dot(A.T, A)
+    else:
+        B = np.dot(A, A.T)
+    while True:
+        lastV = V
+        V = np.dot(B, lastV)
+        V = V / norm(V)
+        if abs(np.dot(V, lastV)) > 1 - epsilon:
+            return V
+
+```
+
+# 
+
+```{python,echo=TRUE}
+def svdPowerMethodRow(A, k=None, epsilon=1e-10):
+    A = np.array(A, dtype=float)
+    m, n = A.shape
+    svdEstimate = []
+    if k is None:
+        k = min(m, n)
+    for i in range(k):
+        matrixFor1D = A.copy()
+        for singularValue, u, v in svdEstimate[:i]:
+            matrixFor1D -= singularValue * np.outer(u, v)
+        v = svdPowerMethod_1d(matrixFor1D,epsilon=epsilon)
+        u_unnormalized = np.dot(A, v)
+        sigma = norm(u_unnormalized)
+        u = u_unnormalized / sigma
+        svdEstimate.append((sigma, u, v))
+    output = [np.array(x) for x in zip(*svdEstimate)]
+    singularValues, us, vs = output
+    return singularValues, us.T, vs
+
+```
+
+#  
+
+```{python,echo=TRUE}
+def svdPowerMethodColumn(A, k=None, epsilon=1e-10):
+    A = np.array(A, dtype=float)
+    m, n = A.shape
+    svdEstimate = []
+    if k is None:
+        k = min(m, n)
+    for i in range(k):
+        matrixFor1D = A.copy()
+        for singularValue, u, v in svdEstimate[:i]:
+            matrixFor1D -= singularValue * np.outer(u, v)
+        u = svdPowerMethod_1d(matrixFor1D,epsilon=epsilon)
+        v_unnormalized = np.dot(A.T, u)
+        sigma = norm(v_unnormalized)
+        v = v_unnormalized / sigma
+        svdEstimate.append((sigma, u, v))
+    output = [np.array(x) for x in zip(*svdEstimate)]
+    singularValues, us, vs = output
+    return singularValues, us.T, vs
+
+```
+
+# SVD of a Matrix, $A$, Using the Power Method
+
+```{python,echo=TRUE}
+def svdPowerMethod(A, k=None, epsilon=1e-10):
+    A = np.array(A, dtype=float)
+    m, n = A.shape
+    if m > n:
+      s, uT, vs=svdPowerMethodRow(A,
+      k, epsilon=1e-10)
+    else:
+      s, uT, vs=svdPowerMethodColumn(A, 
+      k, epsilon=1e-10)
+    return s, uT, vs
+    
+```
+
+```{r,echo=FALSE}
+# define python path
+pythonDirectory <- "C:/Users/Derek/Anaconda2/"
+# select python version
+use_python(pythonDirectory)
+
+```
+
+# Run svdPowerMethod()
+
+```{python,echo=FALSE}
+# set random seed
+random.seed(randomSeed)
+np.random.seed(randomSeed)
+```
+
+```{python,echo=TRUE}
+# compute SVD
+singularValues,U,V = svdPowerMethod(A)
+
+```
+
+```{python,echo=FALSE}
+rS,cS=np.diag(singularValues).shape
+rU,cU=U.shape
+rV,cV=V.shape
+
+```
+
+The `r py$rU` by `r py$cU` matrix of left singular vectors $U$:
+
+```{python,echo=TRUE}
+print(U)
+
+```
+
+#
+
+The `r py$rS` by `r py$cS` diagonal singular value matrix $\Sigma$:
+
+```{python,echo=TRUE}
+print(np.diag(singularValues))
+
+```
+
+The `r py$rV` by `r py$cV` matrix of right singular vectors $V$:
+
+```{python,echo=TRUE}
+print(V)
+
+```
+
+#
+
+We reconstitute the matrix $A$:
+
+```{python,echo=TRUE}
+# reconstitute matrix A
+Sigma = np.diag(singularValues)
+# reconstitute matrix A
+AA=np.dot(U, np.dot(Sigma, V))
+
+```
+
+```{python,echo=TRUE}
+print(AA)
+
+```
+
+#
+
+```{python,echo=FALSE}
+# define number of digits for rounding
+nDigits=10
+```
+
+We can see that the original and reconstituted matrices are the same to `r py$nDigits` decimal places:
+
+```{python,echo=TRUE}
+print(np.round(A - AA, decimals=nDigits))
+
+```
+
+# 
+- Have shown results from full-rank decomposition
+
+- In many applications of SVD - including those involving recommender systems - our objective is to map a (sometimes sparse) high-dimensional space to a dense low-dimensional space
+
+- For example, if we have a large user-by-item explicit ratings matrix, we may want to create a more compact representation of that ratings space using linearly independent latent factors
+
+- We can think of the latent factors as an abstraction that allows us to represent each user and item by a linear combination of other users and items
+
+- Classical SVD is one approach to solve for such latent factors, but unfortunately it can only be applied to a dense matrix
+
+- Using independent latent factors often simplifies the interpretation of large datasets because it drastically reduces the number of interacting variables.
+
+# References
+
+Gene H. Golub and Charles F. Van Loan. Matrix Computations. The John
+Hopkins University Press., 4th edition, 2013.
+
+Jeremy Kun. Source Code for SVD, January 2018. URL https://github.com/
+j2kun/svd.
+
+David Skillicorn. Understanding Complex Datasets: Data Mining with Matrix
+Decompositions. Chapman and Hall/CRC, 2007.
+
+# Appendix A - Power Method
+
+-- Power method for SVD of a matrix $A \in \mathbb{R}^{m \times n}$ works as follows:
+
+- Start by computing the first singular value $\sigma_{1}$ and the left and right singular vectors $u_{1}$ and $v_{1}$ of $A$, for which $\text{min}_{i > j} \text{log} (\sigma_{i}/\sigma_{j}) \ge \lambda$
+
+1. Generate $x_0$ such that $x_{0}(i) \sim \text{N(0,1)}$
+
+2. for $i$ in $[1,\dots,k]$ where $k=\text{min}(m,n)$:
+
+3. $x_{i} \leftarrow A^{T} \leftarrow Ax_{xi-1}$
+
+4. $v_{1} \leftarrow x_{i}/ \lVert x_{i} \rVert$
+
+5. $\sigma_{1} \leftarrow \lVert Av_{1} \rVert$
+
+6. $u_{1} \leftarrow Av_{1}/\sigma{1}$
+
+7. return $\left(\sigma_{1},u_{1},v_{1}\right)$
+
+- Once we have computed $\left(\sigma_{1},u_{1},v_{1}\right)$, we can repeat this process for $A - \sigma_{1}u_{1}v_{1}^{T} = \sum_{i=2}^{n}\sigma_{i}u_{i}v_{i}^{T}$
+
+- Effectively iterate through this process until $i$ = $k$
+
+# Appendix B - Matrix Approximation
+
+We perform the matrix decomposition for the largest $k$ singular values, then reconstitute the matrix using only the associated $k$ latent user and item factors:
+
+```{python,echo=FALSE}
+# set random seed
+random.seed(randomSeed)
+np.random.seed(randomSeed)
+
+```
+
+```{python,echo=TRUE}
+# compute SVD
+kSingularValues,kU,kV = svdPowerMethod(A,k=2)
+
+```
+
+```{python,echo=FALSE}
+krS,kcS=np.diag(kSingularValues).shape
+krU,kcU=kU.shape
+krV,kcV=kV.shape
+
+```
+
+Using the `r py$krU` by `r py$kcU` matrix of left singular vectors $U$, the `r py$krS` by `r py$kcS` diagonal singular value matrix $\Sigma$, and the `r py$krV` by `r py$kcV` matrix of right singular vectors $V$, we reconstitute the approximate matrix $\hat{A}$ using $k$ factors (in this case, just two user factors and two item factors):
+
+```{python,echo=TRUE}
+# reconstitute matrix A
+kSigma = np.diag(kSingularValues)
+# reconstitute matrix A
+kAA=np.dot(kU, np.dot(kSigma, kV))
+
+```
+
+#
+
+We can compare the original matrix $A$ and the two-factor approximation to that matrix $\hat{A}$:
+
+```{python,echo=TRUE}
+print(np.round(AA-kAA,2))
+
+```
+
+Despite the use of an extremely small dataset, the two-factor approximation looks reasonable.
