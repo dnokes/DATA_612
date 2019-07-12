@@ -40,7 +40,7 @@ masterFileName="csi-instrument-master_"+holdingsAsOfDate.strftime("%Y%m%d")
 dbHost='localhost'
 dbPort=3306
 dbUser='root'
-dbPassword='TGDNrx78'
+dbPassword='password'
 databaseName='global_monitoring'
 
 # connect to the 'global_monitoring' MySQL database 
