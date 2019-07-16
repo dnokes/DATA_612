@@ -18,3 +18,6 @@ participationRatioByDate_subset.h5: S&P1500 participation ratio by date
 
 Files of the following format are trading system simulator output files:
 
+SP1500_20-6-120-180-90-5-20-40-75_momentum.h5
+
+Each of these files contains data for a classical momentum strategy with a particular set of parameters.
