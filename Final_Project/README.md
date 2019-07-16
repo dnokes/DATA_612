@@ -23,3 +23,19 @@ Files of the following format are trading system simulator output files:
 SP1500_20-6-120-180-90-5-20-40-75_momentum.h5
 
 Each of these files contains data for a classical momentum strategy with a particular set of parameters.
+
+To get the docker environment:
+
+docker pull dgn2/data_612_dev:version1
+
+Start the Jupyter notebook:
+
+jupyter notebook --ip=0.0.0.0 --allow-root
+
+Navigate to:
+
+http://127.0.0.1:8888/tree
+
+pull the project down from github:
+
+
