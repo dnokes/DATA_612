@@ -1,6 +1,8 @@
 # DATA 612
 
-Folder for DATA 612 final project
+Applications of matrix factorization are ubiquitous in modern data-driven science. The need for tools that can map a high-dimensional space into a lower-dimensional space continually grows as the amount of data we collect increases.
+
+A service like Spotify has subscribers that provide indications of interest in particular content in the catalog by either listening to particular items, clicking on items to read descriptions, or adding items to a playlist. Such implicit ratings data allows recommender systems developers to create the classic user by item by implicit rating matrix and apply collaborative filtering. Similarly, trading systems researchers potentially have a very large set of distinct systems that select instruments from a particular instrument universe. The portfolio of positions - which varies over time - provides an indication of the kind of positions each system ‘likes’. Many systems traders run ensembles comprised of multiple instances of the same system and instrument universe with different parameter sets. The more diverse the systems within the ensemble (i.e., the lower the co-movement between portfolio components) the faster the return compounding. For the systems researcher, despite knowing the underlying mechanism for selecting instruments, it is not always easy to group systems in such a way as to maximize the diversity within the total portfolio.
 
 The output data for this project can be found here:
 
