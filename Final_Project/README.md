@@ -28,6 +28,12 @@ To get the docker environment:
 
 docker pull dgn2/data_612_dev:version1
 
+nvidia-docker run -p 8888:8888 -it -v /local_path/:/docker_container_path/
+
+pull the project (in addition to the rest of the course work) down from github:
+
+[sudo] git clone https://github.com/dnokes/DATA_612.git
+
 Start the Jupyter notebook:
 
 jupyter notebook --ip=0.0.0.0 --allow-root
@@ -36,7 +42,5 @@ Navigate to:
 
 http://127.0.0.1:8888/tree
 
-pull the project (in addition to the rest of the course work) down from github:
 
-https://github.com/dnokes/DATA_612.git
 
