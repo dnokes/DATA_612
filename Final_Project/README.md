@@ -36,6 +36,7 @@ Navigate to:
 
 http://127.0.0.1:8888/tree
 
-pull the project down from github:
+pull the project (in addition to the rest of the course work) down from github:
 
+https://github.com/dnokes/DATA_612.git
 
